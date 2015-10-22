@@ -19,6 +19,11 @@ Winters | 139 | | Tracy | 167
 Dixon | 121 | | Pleasanton | 191
 Lodi West | 166 || Modesto | 71
 
+You can use this handy [Overview Map](https://www.google.com/maps/d/edit?mid=zDpfBkZvP6Yk.kvF3ZvPShMdE&usp=sharing) to locate where these stations are located.
+
+<iframe src="https://www.google.com/maps/d/u/0/embed?mid=zDpfBkZvP6Yk.kvF3ZvPShMdE" width="640" height="480"></iframe>
+
+
 ### Daily Station ```daily_station/2015.wy/[station](.json|.csv)```
 
 The easiest way to download CIMIS station data is via the [CIMIS API](http://et.water.ca.gov).  In order to use that, you need to [register](http://et.water.ca.gov/Home/Register/) to obtain an API key.  Once registered, creating new station data is fairly straight forward.  We simply used this API to download the data.  
