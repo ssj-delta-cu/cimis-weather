@@ -37,12 +37,12 @@ dates.2015:=$(shell for i in `seq 0 364`; do date --date="${start.2015} + $$i da
 months.2015:=$(shell declare -A mo; for i in ${dates.2015}; do m=$${i%/??}; mo[$$m]=1; done; echo $${!mo[@]})
 
 sed.json:=sed -e "s/^\(.\)/.\u\1/" -e "s/\-\(.\)/\u\1/g"
-items.daily:=day-air-tmp-min,day-air-tmp-max,day-air-tmp-avg,day-dew-pnt,day-eto,day-asce-eto,\
-	day-precip,day-sol-rad-avg,day-sol-rad-net,day-wind-spd-avg,day-vap-pres-max,day-vap-pres-min
+items.daily:=day-air-tmp-min day-air-tmp-max day-air-tmp-avg day-dew-pnt day-eto day-asce-eto\
+	day-precip day-sol-rad-avg day-sol-rad-net day-wind-spd-avg day-vap-pres-max day-vap-pres-min
 
-items.daily.json:=$(shell for i in ${items.hourly}; do echo $$i | ${sed.json}; done  )
-items.daily.val:=$(patsubst %,%.Value,${items.hourly.json})
-items.daily.qc:=$(patsubst %,%.QC,${items.hourly.json})
+items.daily.json:=$(shell for i in ${items.daily}; do echo $$i | ${sed.json}; done  )
+items.daily.val:=$(subst ${sp},${comma},$(patsubst %,%.Value,${items.daily.json}))
+items.daily.qc:=$(subst ${sp},${comma},$(patsubst %,%.Qc,${items.daily.json}))
 items.daily.row:=.Station,.Date,${items.daily.val},${items.daily.qc}
 items.daily.header:=$(subst .,,${items.daily.row})
 
@@ -58,14 +58,16 @@ items.hourly.header:=$(subst .,,${items.hourly.row})
 items.cimis:=day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc'
 
 INFO:
-	@echo ${items.daily}
+	@echo ${items.daily.row}
 	@echo items.daily.qc: ${items.daily.qc}
 	@echo "target_ids: ${target_ids}"
 	@echo "dates: ${dates.2015}"
 	@echo "months: ${months.2015}"
 	@echo "hourly: ${items.hourly.json}"
 
-.PHONY:targets csv
+.PHONY:csv
+
+csv: csv.cimis csv.daily csv.hourly
 
 define get_target
 $(warning-no get_target $1 $2)
@@ -76,16 +78,18 @@ csv.hourly:hourly_station/$1.wy/$2.csv
 csv.cimis::cimis/$1.wy/$2.csv
 
 daily_station/$1.wy/$2.json:
+	[[ -d daily_station/$1.wy ]] || mkdir -p daily_station/$1.wy
 	http --timeout=60 GET http://et.water.ca.gov/api/data \
 	  appKey==${appKey} targets==${$2.id} \
 		startDate==${start.$1} endDate==$1-09-30 \
     unitOfMeasure==M dataItems==$(subst ${sp},${comma},${items.daily}) > $$@
 
-daily_station/$1.wy/$2.csv:daily_station/$1/$2.json
+daily_station/$1.wy/$2.csv:daily_station/$1.wy/$2.json
 	echo ${items.daily.header} > $$@
 	jq -r ".Data.Providers[0].Records[] | [${items.daily.row}] | @csv" < $$< >> $$@
 
 hourly_station/$1.wy/$2.json:
+	[[ -d hourly_station/$1.wy ]] || mkdir -p hourly_station/$1.wy
 		http --timeout=240 GET http://et.water.ca.gov/api/data \
 		  appKey==${appKey} targets==${$2.id} \
 			startDate==${start.$1} endDate==$1-09-30 \
@@ -110,7 +114,8 @@ $(foreach w,${water-years},$(foreach t,${targets},$(eval $(call get_target,$w,$t
 clean-csv.cimis::
 	rm -f cimis/wy2015/station.csv
 
-cimis/wy2015/station.csv:
+cimis/2015.wy/station.csv:
+	  [[ -d cimis/2015.wy ]]  || mkdir -p cimis/2015.wy
 	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
 		for i in `seq 0 364`; do \
 			ymd=`date --date="2014-10-01 + $$i days" +%Y/%m/%d`; \
