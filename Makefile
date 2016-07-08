@@ -117,13 +117,22 @@ endef
 $(foreach w,${water-years},$(foreach t,${targets},$(eval $(call get_target,$w,$t))))
 
 clean-csv.cimis::
-	rm -f cimis/wy2015/station.csv
+	rm -f cimis/2015.wy/station.csv cimis/2014.wy_partial/station.csv
 
 cimis/2015.wy/station.csv:
 	  [[ -d cimis/2015.wy ]]  || mkdir -p cimis/2015.wy
 	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
 		for i in `seq 0 364`; do \
 			ymd=`date --date="2014-10-01 + $$i days" +%Y/%m/%d`; \
+			echo $$ymd; \
+			http http://cimis.casil.ucdavis.edu/cimis/$$ymd/station.csv | tail -n +1 >> $@; \
+		done
+
+cimis/2014.wy/station.csv:
+	  [[ -d cimis/2014.wy ]]  || mkdir -p cimis/2014.wy
+	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
+		for i in `seq 0 29`; do \
+			ymd=`date --date="2014-09-01 + $$i days" +%Y/%m/%d`; \
 			echo $$ymd; \
 			http http://cimis.casil.ucdavis.edu/cimis/$$ymd/station.csv | tail -n +1 >> $@; \
 		done
