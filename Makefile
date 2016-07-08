@@ -7,7 +7,7 @@ include appKey.mk
 
 targets:=esparto fair_oaks bryte davis winters dixon \
 	lodi_west twitchell_island	concord	brentwood	\
-	manteca	tracy	pleasanton	modesto
+	manteca	tracy	pleasanton	modesto hastings_east
 
 esparto.id:=196
 fair_oaks.id:=131
@@ -23,6 +23,7 @@ manteca.id:=70
 tracy.id:=167
 pleasanton.id:=191
 modesto.id:=71
+hastings_east.id:=212
 
 empty:=
 sp:=${empty} ${empty}
@@ -35,6 +36,10 @@ water-years:=2015
 start.2015:=$(shell date --date='2015-10-01 - 1 year' +%Y-%m-%d)
 dates.2015:=$(shell for i in `seq 0 364`; do date --date="${start.2015} + $$i days" +%Y/%m/%d; done)
 months.2015:=$(shell declare -A mo; for i in ${dates.2015}; do m=$${i%/??}; mo[$$m]=1; done; echo $${!mo[@]})
+
+start.2014:=2014-09-01
+dates.2014:=$(shell for i in `seq 0 30`; do date --date="${start.2014} + $$i days" +%Y/%m/%d; done)
+months.2014:=$(shell declare -A mo; for i in ${dates.2014}; do m=$${i%/??}; mo[$$m]=1; done; echo $${!mo[@]})
 
 sed.json:=sed -e "s/^\(.\)/.\u\1/" -e "s/\-\(.\)/\u\1/g"
 items.daily:=day-air-tmp-min day-air-tmp-max day-air-tmp-avg day-dew-pnt day-eto day-asce-eto\
@@ -119,8 +124,8 @@ cimis/2015.wy/station.csv:
 	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
 		for i in `seq 0 364`; do \
 			ymd=`date --date="2014-10-01 + $$i days" +%Y/%m/%d`; \
- 			echo $$ymd; \
- 			http http://cimis.casil.ucdavis.edu/cimis/$$ymd/station.csv | tail -n +1 >> $@; \
+			echo $$ymd; \
+			http http://cimis.casil.ucdavis.edu/cimis/$$ymd/station.csv | tail -n +1 >> $@; \
 		done
 
 rast.cimis:=ETo K Rnl Rs Rso Tdew Tn Tx U2
