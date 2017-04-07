@@ -31,8 +31,14 @@ comma:=,
 target_ids := $(foreach t,${targets},${$t.id})
 target_ids := $(subst ${sp},|,${target_ids})
 
-water-years:=2015
+water-years:=2015 2016
 #start.2015:=2014-10-01
+
+# 2016 was a leap year
+start.2016:=$(shell date --date='2016-10-01 - 1 year' +%Y-%m-%d)
+dates.2016:=$(shell for i in `seq 0 365`; do date --date="${start.2016} + $$i days" +%Y/%m/%d; done)
+months.2016:=$(shell declare -A mo; for i in ${dates.2016}; do m=$${i%/??}; mo[$$m]=1; done; echo $${!mo[@]})
+
 start.2015:=$(shell date --date='2015-10-01 - 1 year' +%Y-%m-%d)
 dates.2015:=$(shell for i in `seq 0 364`; do date --date="${start.2015} + $$i days" +%Y/%m/%d; done)
 months.2015:=$(shell declare -A mo; for i in ${dates.2015}; do m=$${i%/??}; mo[$$m]=1; done; echo $${!mo[@]})
@@ -69,6 +75,7 @@ INFO:
 	@echo "dates: ${dates.2015}"
 	@echo "months: ${months.2015}"
 	@echo "hourly: ${items.hourly.json}"
+	@echo "start of wy16: ${start.2016}"
 
 .PHONY:csv
 
@@ -117,8 +124,17 @@ endef
 $(foreach w,${water-years},$(foreach t,${targets},$(eval $(call get_target,$w,$t))))
 
 clean-csv.cimis::
-	rm -f cimis/2015.wy/station.csv cimis/2014.wy_partial/station.csv
+	rm -f cimis/2015.wy/station.csv cimis/2014.wy_partial/station.csv cimis/2016.wy/station.csv
 
+cimis/2016.wy/station.csv:
+	  [[ -d cimis/2016.wy ]]  || mkdir -p cimis/2016.wy
+	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
+		for i in `seq 0 365`; do \
+			ymd=`date --date="2015-10-01 + $$i days" +%Y/%m/%d`; \
+			echo $$ymd; \
+			http http://cimis.casil.ucdavis.edu/cimis/$$ymd/station.csv | tail -n +1 >> $@; \
+		done	
+	
 cimis/2015.wy/station.csv:
 	  [[ -d cimis/2015.wy ]]  || mkdir -p cimis/2015.wy
 	  echo 'x,y,z,station_id,date,day_air_tmp_min,day_air_tmp_min_qc,day_air_tmp_max,day_air_tmp_max_qc,day_wind_spd_avg,day_wind_spd_avg_qc,day_rel_hum_max,day_rel_hum_max_qc,day_dew_pnt,day_dew_pnt_qc' > $@;
@@ -140,7 +156,7 @@ cimis/2014.wy/station.csv:
 rast.cimis:=ETo K Rnl Rs Rso Tdew Tn Tx U2
 
 define cimis_y
-cimis.yearly:: cimis/$1/$2.tif
+cimis.yearly:: cimis/$1.wy/$2.tif
 
 cimis/$1.wy/$2.tif:
 		gdal_merge.py -separate -o cimis/$1.wy/$2.tif  cimis/$(shell let y=$1-1; echo $$y)/1?/$2.tif cimis/$1/0?/$2.tif
@@ -148,7 +164,7 @@ cimis/$1.wy/$2.tif:
 endef
 
 define cimis_ym
-cimis.monthly:: cimis/$1.wy/$2.tif
+cimis.monthly:: cimis/$1/$2.tif
 
 cimis/$1/$2.tif:
 	gdal_merge.py -separate -o cimis/$1/$2.tif  cimis/$1/??/$2.tif
@@ -161,7 +177,7 @@ $3:: cimis/$1/$2/$3.tif
 cimis/$1/$3.tif:: cimis/$1/$2/$3.tif
 
 cimis/$1/$2/$3.tif:
-		[[ -d $1/$2 ]] || mkdir -p $1/$2
+		[[ -d cimis/$1/$2 ]] || mkdir -p cimis/$1/$2
 		http http://cimis.casil.ucdavis.edu/cimis/$1/$2/$3.asc.gz > cimis/$1/$2/$3.asc
 		gdal_translate -a_srs EPSG:3310 -projwin -164000 68000 -108000 -44000 cimis/$1/$2/$3.asc cimis/$1/$2/$3.tif
 		rm cimis/$1/$2/$3.asc
@@ -170,4 +186,8 @@ endef
 
 $(foreach d,${dates.2015},$(foreach r,${rast.cimis},$(eval $(call cimis,$(dir $d),$(notdir $d),$r))))
 $(foreach m,${months.2015},$(foreach r,${rast.cimis},$(eval $(call cimis_ym,$m,$r))))
-$(foreach y,2015,$(foreach r,${rast.cimis},$(eval $(call cimis_y,$y,$r))))
+$(foreach y,${water-years},$(foreach r,${rast.cimis},$(eval $(call cimis_y,$y,$r))))
+
+$(foreach d,${dates.2016},$(foreach r,${rast.cimis},$(eval $(call cimis,$(dir $d),$(notdir $d),$r))))
+$(foreach m,${months.2016},$(foreach r,${rast.cimis},$(eval $(call cimis_ym,$m,$r))))
+$(foreach y,2016,$(foreach r,${rast.cimis},$(eval $(call cimis_y,$y,$r))))
