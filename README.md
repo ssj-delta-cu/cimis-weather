@@ -37,7 +37,7 @@ Similar to the ```daily_station``` data, only using calls for hourly data from t
 
 ## Spatial CIMIS data
 
-The data provided here is basically the same as can be found in the [Spatial CIMIS download site](https://cimis.casil.ucdavis.edu/cimis/2015) but has been organized and reformatted.  Users can go back to the original site for more infomation.  Again, the ```Makefile``` provides useful clues for using this data.
+The data provided here is basically the same as can be found in the [Spatial CIMIS download site](http://cimis.casil.ucdavis.edu/cimis/) but has been organized and reformatted.  Users can go back to the original site for more infomation.  Again, the ```Makefile``` provides useful clues for using this data.
 
 Spatial CIMIS provides the following parameters:
 
@@ -56,7 +56,7 @@ U2 |m/s| Average Daily Wind Speed at 2m
 
 ### Station Data ```cimis/[water year]/station.csv``` ```cimis/[water year]/[station].csv```
 
-It is possible that the station data used at the time of the Spatial CIMIS calculations do not match the data currently provided.  The station data used in the calculating  the Spatial CIMIS rasters is included in the ```cimis/[water year]/``` directory.  We include the station data for each of the above Delta stations.  We also include all the data used for every day.  This data comes from the ```station.csv``` located in each directory from the [Spatial CIMIS download site](https://cimis.casil.ucdavis.edu/cimis). Made with ```make csv.cimis```.
+It is possible that the station data used at the time of the Spatial CIMIS calculations do not match the data currently provided.  The station data used in the calculating  the Spatial CIMIS rasters is included in the ```cimis/[water year]/``` directory.  We include the station data for each of the above Delta stations.  We also include all the data used for every day.  This data comes from the ```station.csv``` located in each directory from the [Spatial CIMIS download site](http://cimis.casil.ucdavis.edu/cimis). Made with ```make csv.cimis```.
 
 Note the the headers for the cimis data and the station data are slightly different, but the correspondence between them is clear.
 
